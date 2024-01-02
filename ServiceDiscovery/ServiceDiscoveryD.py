@@ -16,37 +16,29 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-import unittest
+import argparse
 import ServiceDiscovery
-import time
+import sys
 
-TEST_SERVICE_NAME = "test"
+def main():
 
-class Test1_d2dBrokerDiscover(unittest.TestCase):
-
-    def test1_startStopBrokerDiscover(self):
-        broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        t1 = broker_discover.run(True)
-        time.sleep(2)
-        broker_discover.stop()
-        time.sleep(1)
-        self.assertFalse(t1.is_alive())
+    parser = argparse.ArgumentParser(description="Service discovery damemon")
+    parser.add_argument(
+        "service_name",
+        nargs=1,
+        help="Service name",
+        type=str)
+    args = parser.parse_args(sys.argv[1:])
 
 
-    def test2_brokerDiscover(self):
+    try:
+        daemon = ServiceDiscovery.daemon(args.service_name[0])
+        daemon.run()
+
+    except KeyboardInterrupt:
+        pass
 
 
-        broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover.run(True)
-        time.sleep(2)
-
-
-        test1= ServiceDiscovery.client()
-        ip = test1.getServiceIP(TEST_SERVICE_NAME)
-        self.assertTrue(ip != "")
-        self.assertTrue(len(ip.split(".")) == 4)
-
-
+# Main execution
 if __name__ == '__main__':
-    unittest.main()
+    main()
