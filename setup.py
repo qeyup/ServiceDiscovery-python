@@ -11,7 +11,10 @@ if __name__ == '__main__':
         name = 'ServiceDiscovery',
         version = ServiceDiscovery.version,
         packages = ["."],
-        data_files = [],
+        data_files = [
+            "__init__.py",
+            "ServiceDiscovery.py"
+        ],
         install_requires = [],
         author = "Javier Moreno Garcia",
         author_email = "jgmore@gmail.com",
