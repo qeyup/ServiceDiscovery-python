@@ -10,7 +10,7 @@ if __name__ == '__main__':
     setuptools.setup(
         name = 'ServiceDiscovery',
         version = ServiceDiscovery.version,
-        packages = ["."],
+        packages = [],
         data_files = [
             "__init__.py",
             "ServiceDiscovery.py"
