@@ -23,9 +23,9 @@ import time
 
 TEST_SERVICE_NAME = "test"
 
-class Test1_d2dBrokerDiscover(unittest.TestCase):
+class ServiceDiscover(unittest.TestCase):
 
-    def test1_startStopBrokerDiscover(self):
+    def test1_startStopDaemon(self):
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         t1 = broker_discover.run(True)
         time.sleep(2)
@@ -34,7 +34,7 @@ class Test1_d2dBrokerDiscover(unittest.TestCase):
         self.assertFalse(t1.is_alive())
 
 
-    def test2_brokerDiscover(self):
+    def test2_getServiceIP(self):
 
 
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
