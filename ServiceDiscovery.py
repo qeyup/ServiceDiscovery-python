@@ -125,7 +125,7 @@ class daemon():
             self.__thread .start()
             return self.__thread
         else:
-            daemon.__run(self.__mcast)
+            daemon.__run(self.__shared_container)
             return None
 
 
