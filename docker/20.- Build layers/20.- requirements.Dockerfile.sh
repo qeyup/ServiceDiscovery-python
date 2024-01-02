@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -e
+
+# Set not iterative
+export DEBIAN_FRONTEND=noninteractive
+
+
+# Configure timezone
+ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime
+echo ${TZ} > /etc/timezone
+
+
+# Upgrade system
+PACKAGES=()
+apt update --fix-missing
+apt upgrade -y
+
+
+# Intall Yocto Proyect basic dependencies and extras
+
+PACKAGES+=(git)
+PACKAGES+=(wget)
+PACKAGES+=(curl)
+PACKAGES+=(unzip)
+PACKAGES+=(xz-utils)
+
+PACKAGES+=(python3)
+PACKAGES+=(python3-pip)
+
+PACKAGES+=(tzdata)
+
+
+# Set up locales
+DEBIAN_FRONTEND=noninteractive
+PACKAGES+=(locales)
+PACKAGES+=(apt-utils)
+PACKAGES+=(sudo)
+
+
+
+# Install all
+apt install -y ${PACKAGES[@]}
+
+
+# Reconfigure
+dpkg-reconfigure locales
+locale-gen ${LANG}
+update-locale LC_ALL=${LC_ALL} LANG=${LANG}
+
+
+# Replace dash with bash
+rm /bin/sh
+ln -s /bin/bash /bin/sh
+
+
+# Install repo
+curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
+chmod a+x /usr/local/bin/repo
