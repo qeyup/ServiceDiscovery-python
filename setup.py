@@ -11,7 +11,12 @@ if __name__ == '__main__':
         name = 'ServiceDiscovery',
         version = ServiceDiscovery.version,
         packages = ["ServiceDiscovery"],
-        entry_points={'console_scripts': ['ServiceDiscoveryD=ServiceDiscovery.ServiceDiscoveryD:main']},
+        entry_points={
+            'console_scripts': [
+                'ServiceDiscoveryD=ServiceDiscovery.ServiceDiscoveryD:main',
+                'ServiceDiscoveryC=ServiceDiscovery.ServiceDiscoveryC:main'
+            ],
+        },
         install_requires = [],
         author = "Javier Moreno Garcia",
         author_email = "jgmore@gmail.com",
