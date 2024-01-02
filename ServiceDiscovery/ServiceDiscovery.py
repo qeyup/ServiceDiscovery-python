@@ -66,8 +66,9 @@ class mcast():
                 if timeout >= 0 and int(time.time()) - current_epoch_time >= timeout:
                     return None, None, None
 
-            except:
+            except socket.error:
                 return None, None, None
+
 
         return None, None, None
 
@@ -156,5 +157,5 @@ class client():
             if received_response == expected_response:
                 return ip
 
-            elif i >= retry:
+            elif retry > 0 and i >= retry:
                 return None
