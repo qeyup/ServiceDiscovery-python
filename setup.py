@@ -10,11 +10,8 @@ if __name__ == '__main__':
     setuptools.setup(
         name = 'ServiceDiscovery',
         version = ServiceDiscovery.version,
-        packages = [],
-        data_files = [
-            "__init__.py",
-            "ServiceDiscovery.py"
-        ],
+        packages = ["ServiceDiscovery"],
+        entry_points={'console_scripts': ['ServiceDiscoveryD=ServiceDiscovery.ServiceDiscoveryD:main']},
         install_requires = [],
         author = "Javier Moreno Garcia",
         author_email = "jgmore@gmail.com",

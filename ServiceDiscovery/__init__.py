@@ -1,4 +1,3 @@
-#! /usr/bin/python3
 # 
 # This file is part of the ServiceDiscovery distribution.
 # Copyright (c) 2023 Javier Moreno Garcia.
@@ -16,19 +15,4 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-import ServiceDiscovery
-import sys
-
-
-# Main execution
-if __name__ == '__main__':
-    try:
-        daemon = ServiceDiscovery.daemon(sys.argv[1])
-        daemon.run()
-
-    except KeyboardInterrupt:
-        pass
-
-    except:
-        print("usage ", sys.argv[0], " [SERVICE_NAME]")
+from .ServiceDiscovery import *
