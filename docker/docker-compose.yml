@@ -1,6 +1,7 @@
 version: "3.3"
 services:
   build_env:
+    build: "."
     image: "service_discovery_dwi"
     volumes:
       - ../:/home/docker/workspace
