@@ -20,15 +20,19 @@ import socket
 import struct
 import threading
 import time
+import random
+import re
 
 
-version = "0.1.0"
+version = "0.2.0"
 
 
 class constants():
     MCAST_DISCOVER_GRP = '224.1.1.1'
     MCAST_DISCOVER_SERVER_PORT = 5005
     MCAST_DISCOVER_CLIENT_PORT = 5006
+    MCAST_DISCOVER_SYNC_PORT = 5007
+    MCAST_DISCOVER_SYNC_TIME = 0.25
     MULTICAST_TTL = 2
     DISCOVER_MSG_REQUEST = "Who's SERVICE?"
     DISCOVER_MSG_RESPONSE = "I'm SERVICE"
@@ -56,14 +60,14 @@ class mcast():
 
     def read(self, timeout=-1):
 
-        current_epoch_time = int(time.time())
+        current_epoch_time = float(time.time())
         while self.__open:
             try:
                 data, (ip, port) = self.__sock.recvfrom(4096)
                 return data, ip, port
 
             except socket.timeout:
-                if timeout >= 0 and int(time.time()) - current_epoch_time >= timeout:
+                if timeout >= 0 and float(time.time()) - current_epoch_time >= timeout:
                     return None, None, None
 
             except socket.error:
@@ -97,12 +101,26 @@ class daemon():
         self.__shared_container.service_name = service_name
         self.__shared_container.mcast_listen_request = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_SERVER_PORT)
         self.__shared_container.mcast_send_respond = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_CLIENT_PORT)
+        self.__shared_container.mcast_sync = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_SYNC_PORT)
+        self.__shared_container.sync_token = int(random.random() * 1000000) + 1
 
 
     def __del__(self):
         self.stop()
         if self.__thread:
             self.__thread.join()
+
+
+    def __readSync(shared_container):
+
+        while True:
+            received_response, ip, port = shared_container.mcast_sync.read(constants.MCAST_DISCOVER_SYNC_TIME)
+
+            if not received_response:
+                return None
+
+            elif re.match("^" + shared_container.service_name + "\.\d*$", received_response.decode()):
+                return int(received_response.decode().split(".")[1])
 
 
     def __run(shared_container):
@@ -117,7 +135,24 @@ class daemon():
                 break
 
             if request == expected_request:
-                shared_container.mcast_send_respond.send(response)
+
+                # Sync process
+                shared_container.mcast_sync.send(str(shared_container.service_name + "." + str(shared_container.sync_token)).encode())
+                main_token = True
+                while True:
+
+                    sync_token = daemon.__readSync(shared_container)
+                    if sync_token == None:
+                        break
+
+                    elif sync_token < shared_container.sync_token:
+                        main_token = False
+
+
+                # Respose if main
+                if main_token:
+                    shared_container.sync_token = 0
+                    shared_container.mcast_send_respond.send(response)
 
 
     def run(self, thread=False):
@@ -138,7 +173,7 @@ class daemon():
 
 class client():
 
-    def getServiceIP(self, service_name, timeout=5, retry=3) -> str:
+    def getServiceIP(self, service_name, timeout=5, retry=0) -> str:
         mcast_send_request = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_SERVER_PORT)
         mcast_listen_respond = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_CLIENT_PORT)
 
@@ -147,9 +182,7 @@ class client():
 
         i = 0
 
-        while True:
-
-            i += 1
+        while retry < 0 or i <= retry:
 
             mcast_send_request.send(request)
             received_response, ip, port = mcast_listen_respond.read(timeout)
@@ -157,5 +190,6 @@ class client():
             if received_response == expected_response:
                 return ip
 
-            elif retry > 0 and i >= retry:
-                return None
+            i += 1
+
+        return None
