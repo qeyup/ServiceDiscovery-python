@@ -48,5 +48,31 @@ class ServiceDiscover(unittest.TestCase):
         self.assertTrue(len(ip.split(".")) == 4)
 
 
+    def test3_getMultipleServiceSync(self):
+
+
+        broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover.run(True)
+
+        broker_discover2 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover2.run(True)
+
+        broker_discover3 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover3.run(True)
+
+        broker_discover4 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover4.run(True)
+
+
+        time.sleep(2)
+
+        test1= ServiceDiscovery.client()
+        ip = test1.getServiceIP(TEST_SERVICE_NAME)
+        self.assertTrue(ip != None)
+
+        ip = test1.getServiceIP(TEST_SERVICE_NAME)
+        self.assertTrue(ip != None)
+
+
 if __name__ == '__main__':
     unittest.main()
