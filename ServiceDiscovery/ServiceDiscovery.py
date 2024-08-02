@@ -15,7 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-
+import os
 import socket
 import struct
 import threading
@@ -24,7 +24,7 @@ import random
 import re
 
 
-version = "0.2.0"
+version = "0.2.1"
 
 
 class constants():
@@ -47,7 +47,10 @@ class mcast():
         self.__open = True
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.__sock.bind((ip, port))
+        if os.name != 'nt':
+            self.__sock.bind((ip, port))
+        else:
+            self.__sock.bind(('', port))
         self.__sock.settimeout(0.1)
 
         mreq = struct.pack("4sl", socket.inet_aton(ip), socket.INADDR_ANY)
