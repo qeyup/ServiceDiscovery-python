@@ -24,7 +24,7 @@ import random
 import re
 
 
-version = "0.2.1"
+version = "0.2.2"
 
 
 class constants():
@@ -172,6 +172,10 @@ class daemon():
         self.__shared_container.run = False
         self.__shared_container.mcast_listen_request.close()
         self.__shared_container.mcast_send_respond.close()
+
+
+    def isMaster(self):
+        return self.__shared_container.sync_token == 0
 
 
 class client():
