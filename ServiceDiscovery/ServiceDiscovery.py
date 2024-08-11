@@ -24,7 +24,7 @@ import random
 import re
 
 
-version = "0.2.2"
+version = "0.3.0"
 
 
 class constants():
@@ -37,6 +37,7 @@ class constants():
     DISCOVER_MSG_REQUEST = "Who's SERVICE?"
     DISCOVER_MSG_RESPONSE = "I'm SERVICE"
     SERVICE_LABEL = "SERVICE"
+    PORT_SEP = b'#'
 
 
 class mcast():
@@ -100,6 +101,7 @@ class daemon():
     def __init__(self, service_name):
         self.__thread = None
         self.__shared_container = container()
+        self.__shared_container.port = None
         self.__shared_container.run = True
         self.__shared_container.service_name = service_name
         self.__shared_container.mcast_listen_request = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_SERVER_PORT)
@@ -155,7 +157,10 @@ class daemon():
                 # Respose if main
                 if main_token:
                     shared_container.sync_token = 0
-                    shared_container.mcast_send_respond.send(response)
+                    if shared_container.port:
+                        shared_container.mcast_send_respond.send(response + constants.PORT_SEP + str(shared_container.port).encode())
+                    else:
+                        shared_container.mcast_send_respond.send(response)
 
 
     def run(self, thread=False):
@@ -178,9 +183,13 @@ class daemon():
         return self.__shared_container.sync_token == 0
 
 
+    def setPort(self, port:int):
+        self.__shared_container.port = port
+
+
 class client():
 
-    def getServiceIP(self, service_name, timeout=5, retry=0) -> str:
+    def __getServiceIP(self, service_name, timeout=5, retry=0) -> str:
         mcast_send_request = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_SERVER_PORT)
         mcast_listen_respond = mcast(constants.MCAST_DISCOVER_GRP, constants.MCAST_DISCOVER_CLIENT_PORT)
 
@@ -194,9 +203,25 @@ class client():
             mcast_send_request.send(request)
             received_response, ip, port = mcast_listen_respond.read(timeout)
 
-            if received_response == expected_response:
-                return ip
+            response_split = received_response.split(constants.PORT_SEP)
+
+            if response_split[0] == expected_response:
+                try:
+                    return ip, int(response_split[1]) if len(response_split) > 1 else None
+
+                except:
+                    pass
 
             i += 1
 
-        return None
+        return None, None
+
+
+    def getServiceIP(self, service_name, timeout=5, retry=0):
+        ip, metadata = self.__getServiceIP(service_name, timeout, retry)
+        return ip
+
+
+    def getServiceIPAndPort(self, service_name, timeout=5, retry=0):
+        ip, port = self.__getServiceIP(service_name, timeout, retry)
+        return ip, port

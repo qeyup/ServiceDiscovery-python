@@ -74,5 +74,39 @@ class ServiceDiscover(unittest.TestCase):
         self.assertTrue(ip != None)
 
 
+    def test4_getMultipleServiceSyncWithPort(self):
+
+
+        broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover.setPort(1001)
+        broker_discover.run(True)
+
+        broker_discover2 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover2.setPort(1002)
+        broker_discover2.run(True)
+
+        broker_discover3 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover3.setPort(1003)
+        broker_discover3.run(True)
+
+        broker_discover4 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+        broker_discover4.setPort(1004)
+        broker_discover4.run(True)
+
+
+        time.sleep(2)
+
+        test1= ServiceDiscovery.client()
+        ip, port = test1.getServiceIPAndPort(TEST_SERVICE_NAME)
+        self.assertTrue(ip != None)
+        self.assertTrue(port != None)
+        self.assertTrue(port > 1000)
+
+        ip, port = test1.getServiceIPAndPort(TEST_SERVICE_NAME)
+        self.assertTrue(port != None)
+        self.assertTrue(port > 1000)
+
+
+
 if __name__ == '__main__':
     unittest.main()

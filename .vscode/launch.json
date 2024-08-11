@@ -8,7 +8,7 @@
             "name": "unit test",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/ServiceDiscovery/test.py",
+            "program": "${workspaceFolder}/test.py",
             "console": "integratedTerminal"
         }
     ]
