@@ -20,14 +20,16 @@
 import unittest
 import ServiceDiscovery
 import time
+import threading
 
 TEST_SERVICE_NAME = "test"
 
 class ServiceDiscover(unittest.TestCase):
 
     def test1_startStopDaemon(self):
+
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        t1 = broker_discover.run(True)
+        t1 = broker_discover.run()
         time.sleep(2)
         broker_discover.stop()
         time.sleep(1)
@@ -36,9 +38,8 @@ class ServiceDiscover(unittest.TestCase):
 
     def test2_getServiceIP(self):
 
-
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover.run(True)
+        broker_discover.run()
         time.sleep(2)
 
 
@@ -50,18 +51,17 @@ class ServiceDiscover(unittest.TestCase):
 
     def test3_getMultipleServiceSync(self):
 
-
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover.run(True)
+        broker_discover.run()
 
         broker_discover2 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover2.run(True)
+        broker_discover2.run()
 
         broker_discover3 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover3.run(True)
+        broker_discover3.run()
 
         broker_discover4 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
-        broker_discover4.run(True)
+        broker_discover4.run()
 
 
         time.sleep(2)
@@ -76,22 +76,21 @@ class ServiceDiscover(unittest.TestCase):
 
     def test4_getMultipleServiceSyncWithPort(self):
 
-
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         broker_discover.setPort(1001)
-        broker_discover.run(True)
+        broker_discover.run()
 
         broker_discover2 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         broker_discover2.setPort(1002)
-        broker_discover2.run(True)
+        broker_discover2.run()
 
         broker_discover3 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         broker_discover3.setPort(1003)
-        broker_discover3.run(True)
+        broker_discover3.run()
 
         broker_discover4 = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         broker_discover4.setPort(1004)
-        broker_discover4.run(True)
+        broker_discover4.run()
 
 
         time.sleep(2)
@@ -106,6 +105,50 @@ class ServiceDiscover(unittest.TestCase):
         self.assertTrue(port != None)
         self.assertTrue(port > 1000)
 
+
+    def test5_multipleDaemonPreformace(self):
+
+        daemons = []
+        for i in range(50):
+
+            broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+            broker_discover.setPort(1000+i)
+            broker_discover.run()
+            daemons.append(broker_discover)
+
+
+        def clientThread(results, mutex):
+            client = ServiceDiscovery.client()
+            ip, port = client.getServiceIPAndPort(TEST_SERVICE_NAME)
+            with mutex:
+                results.append(port)
+
+        results = []
+        threads = []
+        save_result_mutex = threading.RLock()
+        for i in range(50):
+            thread = threading.Thread(target=clientThread, daemon=True, args=[results, save_result_mutex])
+            thread.start()
+            threads.append(thread)
+
+        # Wait
+        for thread in threads:
+            thread.join()
+
+
+        # Check
+        resuls_clean = list(dict.fromkeys(results))
+        self.assertTrue(len(resuls_clean) == 1)
+        self.assertTrue(resuls_clean[0] != None)
+
+
+        # Check maestry
+        ok = False
+        for daemon in daemons:
+            if daemon.getPort() == resuls_clean[0]:
+                ok = daemon.isMaster()
+                break
+        self.assertTrue(ok)
 
 
 if __name__ == '__main__':
