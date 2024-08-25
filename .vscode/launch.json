@@ -9,7 +9,27 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/test.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": [
+                "${input:test}"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "test",
+            "description": "Select test to debug",
+            "type": "pickString",
+            "options": [
+                "ServiceDiscover.test0_startStopDaemon",
+                "ServiceDiscover.test1_deleteDaemon",
+                "ServiceDiscover.test2_getServiceIP",
+                "ServiceDiscover.test3_getMultipleServiceSync",
+                "ServiceDiscover.test4_getMultipleServiceSyncWithPort",
+                "ServiceDiscover.test5_multipleDaemonPreformace",
+                "ServiceDiscover"
+            ],
+            "default": "ServiceDiscover"
         }
     ]
 }

@@ -21,12 +21,13 @@ import unittest
 import ServiceDiscovery
 import time
 import threading
+import weakref
 
 TEST_SERVICE_NAME = "test"
 
 class ServiceDiscover(unittest.TestCase):
 
-    def test1_startStopDaemon(self):
+    def test0_startStopDaemon(self):
 
         broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
         t1 = broker_discover.run()
@@ -34,6 +35,17 @@ class ServiceDiscover(unittest.TestCase):
         broker_discover.stop()
         time.sleep(1)
         self.assertFalse(t1.is_alive())
+
+
+    def test1_deleteDaemon(self):
+
+        def instanciate():
+            broker_discover = ServiceDiscovery.daemon(TEST_SERVICE_NAME)
+            t1 = broker_discover.run()
+            return weakref.ref(t1)
+
+        weak_ptr = instanciate()
+        self.assertTrue(weak_ptr() == None)
 
 
     def test2_getServiceIP(self):
@@ -152,4 +164,4 @@ class ServiceDiscover(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

@@ -24,7 +24,7 @@ import random
 import re
 
 
-version = "0.4.0"
+version = "0.4.1"
 
 
 class constants():
@@ -242,13 +242,11 @@ class daemon():
 
     def __del__(self):
         self.stop()
-        if self.__thread:
-            self.__thread.join()
 
 
     def __readSync(shared_container):
 
-        while True:
+        while shared_container.run:
             received_response, ip, port = shared_container.mcast_sync.read(constants.MCAST_SYNC_READ_TIME*2)
 
             if not received_response:
@@ -256,6 +254,8 @@ class daemon():
 
             elif re.match("^" + shared_container.service_name + "\\.\\d*$", received_response.decode()):
                 return int(received_response.split(constants.SYNC_SEP)[1].decode())
+
+        return None
 
 
     def __run(shared_container):
@@ -333,7 +333,12 @@ class daemon():
         self.__shared_container.run = False
         self.__shared_container.mcast_listen_request.close()
         self.__shared_container.mcast_sync.close()
-
+        if self.__thread:
+            self.__thread.join()
+        if self.__shared_container.sync_tx_thread:
+            self.__shared_container.sync_tx_thread.join()
+        if self.__shared_container.sync_rx_thread:
+            self.__shared_container.sync_rx_thread.join()
 
     def getEnable(self):
         return self.__shared_container.enable
@@ -372,16 +377,20 @@ class client():
 
 
         # Wait sync end
+        start_time = float(time.time())
         while True:
             received_response, ip, port = sync_listener.read(constants.MCAST_SYNC_READ_TIME*2)
 
             if not received_response:
-                break
+                return None, None
 
             elif re.match("^" + service_name + "\\.\\d*$", received_response.decode()):
                 token = int(received_response.split(constants.SYNC_SEP)[1].decode())
                 if token == 0:
                     break
+
+            elif float(time.time()) - start_time > timeout:
+                return None, None
 
 
         # Send request
